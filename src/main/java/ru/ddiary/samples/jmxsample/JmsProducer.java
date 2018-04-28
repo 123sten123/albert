@@ -18,14 +18,7 @@ import com.test.dao.HibernateSessionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import com.test.dao.HibernateSessionFactory;
 
-/**
- * Класс отправителя сообщений
- * Логика работы:
- * в цикле читает очередь _messagesQueue и отправляет сообщения в брокер activemq
- * В очередь _messagesQueue попадают сообщения, введеные пользователем в консоли.
- * Отправка происходит в синхронном режиме, вызовом producer.send(msg);
- *
- */
+
 public class JmsProducer extends Thread implements AutoCloseable {
     private static String DEF_QUEUE = "test.in";
 
@@ -36,16 +29,12 @@ public class JmsProducer extends Thread implements AutoCloseable {
     private boolean _active = true;
     org.hibernate.Session session = HibernateSessionFactory.getSessionFactory().openSession();
 
-    /**
-     * Конструктор используется в случае, когда брокер не требует авторизации.
-     */
+
     public JmsProducer(String url) {
         this(url, null, null);
     }
 
-    /**
-     * Конструктор используется в случае, когда брокер требует авторизацию.
-     */
+
     public JmsProducer(String url, String user, String password) {
         if (user != null && !user.isEmpty() && password != null)
             _connectionFactory = new ActiveMQConnectionFactory(url, user, password);
@@ -56,9 +45,7 @@ public class JmsProducer extends Thread implements AutoCloseable {
 
     }
 
-    /**
-     * Инициализация producer-а.
-     */
+
     private MessageProducer init() throws JMSException {
         _connection = _connectionFactory.createConnection();
         _connection.start();
@@ -68,21 +55,17 @@ public class JmsProducer extends Thread implements AutoCloseable {
 
     }
 
-    /**
-     * Метод отправки только лишь добавляет сообщение во внутреннюю очередь.
-     * Самой отправки в брокер здесь не происходит, она делается в методе run.
-     */
+
     public void send(String line) {
         _messagesQueue.add(line);
     }
+
     public synchronized void sendMsg(String line) {
         _messagesQueue.add(line);
         notifyAll();
     }
 
-    /**
-     * Метод цикла отправки сообщений в брокер.
-     */
+
     @Override
     public synchronized void run() {
         try {
@@ -104,9 +87,6 @@ public class JmsProducer extends Thread implements AutoCloseable {
                         message.setFirstname(text);
                         message.setId(msg.getJMSMessageID());
                         session.save(message);
-
-//                        session.getTransaction().commit();
-
                     }
 
                 } catch (JMSException e) {
